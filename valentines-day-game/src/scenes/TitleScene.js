@@ -223,7 +223,7 @@ export default class TitleScene extends Phaser.Scene {
         this.canStart = false
 
         // ─── Hint at bottom ───
-        const hint = this.add.text(width / 2, height - 16, 'Press Enter or click the button to begin', {
+        const hint = this.add.text(width / 2, height - 16, 'Tap the button or press Enter to begin', {
             fontFamily: 'Inter, sans-serif',
             fontSize: '10px',
             color: '#475569'

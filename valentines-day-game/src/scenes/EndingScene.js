@@ -123,6 +123,11 @@ export default class EndingScene extends Phaser.Scene {
             d: Phaser.Input.Keyboard.KeyCodes.D
         })
 
+        // ─── Mobile Touch Controls ───
+        this.touchLeft = false
+        this.touchRight = false
+        this.createMobileControls()
+
         this.canControl = false
         this.time.delayedCall(1500, () => { this.canControl = true })
 
@@ -176,6 +181,46 @@ export default class EndingScene extends Phaser.Scene {
         }
     }
 
+    createMobileControls() {
+        const { width, height } = this.scale
+        const btnSize = 52
+        const margin = 16
+        const btnY = height - margin - btnSize / 2
+        const btnAlpha = 0.35
+
+        // Left arrow button
+        const leftBtn = this.add.rectangle(margin + btnSize / 2, btnY, btnSize, btnSize, 0x1e293b, 0.6)
+            .setStrokeStyle(1.5, 0xf472b6, 0.5)
+            .setDepth(200).setAlpha(btnAlpha)
+            .setInteractive()
+
+        this.add.text(margin + btnSize / 2, btnY, '◀', {
+            fontFamily: '"Press Start 2P", monospace',
+            fontSize: '16px',
+            color: '#f9a8d4'
+        }).setOrigin(0.5).setDepth(201).setAlpha(btnAlpha)
+
+        // Right arrow button
+        const rightBtn = this.add.rectangle(margin + btnSize + 12 + btnSize / 2, btnY, btnSize, btnSize, 0x1e293b, 0.6)
+            .setStrokeStyle(1.5, 0xf472b6, 0.5)
+            .setDepth(200).setAlpha(btnAlpha)
+            .setInteractive()
+
+        this.add.text(margin + btnSize + 12 + btnSize / 2, btnY, '▶', {
+            fontFamily: '"Press Start 2P", monospace',
+            fontSize: '16px',
+            color: '#f9a8d4'
+        }).setOrigin(0.5).setDepth(201).setAlpha(btnAlpha)
+
+        leftBtn.on('pointerdown', () => { this.touchLeft = true })
+        leftBtn.on('pointerup', () => { this.touchLeft = false })
+        leftBtn.on('pointerout', () => { this.touchLeft = false })
+
+        rightBtn.on('pointerdown', () => { this.touchRight = true })
+        rightBtn.on('pointerup', () => { this.touchRight = false })
+        rightBtn.on('pointerout', () => { this.touchRight = false })
+    }
+
     drawSkyGradient(r1, g1, b1, r2, g2, b2) {
         const { width, height } = this.scale
         const steps = 32
@@ -215,8 +260,8 @@ export default class EndingScene extends Phaser.Scene {
         if (this.climaxTriggered || !this.canControl) return
 
         const speed = 30
-        const moveLeft = this.keys.left.isDown || this.keys.a.isDown
-        const moveRight = this.keys.right.isDown || this.keys.d.isDown
+        const moveLeft = this.keys.left.isDown || this.keys.a.isDown || this.touchLeft
+        const moveRight = this.keys.right.isDown || this.keys.d.isDown || this.touchRight
 
         if (moveLeft) {
             this.female.x -= speed * (1 / 60)

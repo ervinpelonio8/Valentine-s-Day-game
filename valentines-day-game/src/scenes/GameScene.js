@@ -195,6 +195,11 @@ export default class GameScene extends Phaser.Scene {
             d: Phaser.Input.Keyboard.KeyCodes.D
         })
 
+        // ─── Mobile Touch Controls ───
+        this.touchLeft = false
+        this.touchRight = false
+        this.createMobileControls()
+
         // ─── Memory triggers ───
         this.memories = this.physics.add.staticGroup()
         this.seen = new Set()
@@ -205,7 +210,16 @@ export default class GameScene extends Phaser.Scene {
             icon.setData('memory', m)
             icon.setScale(0.8)
             icon.setDepth(5)
+            icon.setInteractive()
             this.memoryIcons.push(icon)
+
+            // Tap to open/reread on mobile
+            icon.on('pointerdown', () => {
+                if (!this.overlayActive && this.nearMemory) {
+                    const mem = icon.getData('memory')
+                    this.openMemory(mem)
+                }
+            })
 
             // Soft pulsing glow tween on each heart
             this.tweens.add({
@@ -285,6 +299,50 @@ export default class GameScene extends Phaser.Scene {
 
         // Initialize Debug Tool
         // this.createDebugTool();
+    }
+
+    createMobileControls() {
+        const { width, height } = this.scale
+        const btnSize = 52
+        const margin = 16
+        const btnY = height - margin - btnSize / 2
+        const btnAlpha = 0.35
+
+        // Left arrow button
+        const leftBtn = this.add.rectangle(margin + btnSize / 2, btnY, btnSize, btnSize, 0x1e293b, 0.6)
+            .setStrokeStyle(1.5, 0xf472b6, 0.5)
+            .setScrollFactor(0).setDepth(200).setAlpha(btnAlpha)
+            .setInteractive()
+
+        const leftArrow = this.add.text(margin + btnSize / 2, btnY, '◀', {
+            fontFamily: '"Press Start 2P", monospace',
+            fontSize: '16px',
+            color: '#f9a8d4'
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(201).setAlpha(btnAlpha)
+
+        // Right arrow button
+        const rightBtn = this.add.rectangle(margin + btnSize + 12 + btnSize / 2, btnY, btnSize, btnSize, 0x1e293b, 0.6)
+            .setStrokeStyle(1.5, 0xf472b6, 0.5)
+            .setScrollFactor(0).setDepth(200).setAlpha(btnAlpha)
+            .setInteractive()
+
+        const rightArrow = this.add.text(margin + btnSize + 12 + btnSize / 2, btnY, '▶', {
+            fontFamily: '"Press Start 2P", monospace',
+            fontSize: '16px',
+            color: '#f9a8d4'
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(201).setAlpha(btnAlpha)
+
+        // Touch handlers for left
+        leftBtn.on('pointerdown', () => { this.touchLeft = true })
+        leftBtn.on('pointerup', () => { this.touchLeft = false })
+        leftBtn.on('pointerout', () => { this.touchLeft = false })
+
+        // Touch handlers for right
+        rightBtn.on('pointerdown', () => { this.touchRight = true })
+        rightBtn.on('pointerup', () => { this.touchRight = false })
+        rightBtn.on('pointerout', () => { this.touchRight = false })
+
+        this.mobileControls = { leftBtn, leftArrow, rightBtn, rightArrow }
     }
 
     spawnFemale() {
@@ -466,16 +524,18 @@ export default class GameScene extends Phaser.Scene {
         const speed = 220
         const body = this.player.body
 
-        if (this.keys.left.isDown || this.keys.a.isDown) {
+        const moveLeft = this.keys.left.isDown || this.keys.a.isDown || this.touchLeft
+        const moveRight = this.keys.right.isDown || this.keys.d.isDown || this.touchRight
+
+        if (moveLeft) {
             body.setVelocityX(-speed)
             this.player.setFlipX(true)
             this.player.anims.play('male-walk', true)
-        } else if (this.keys.right.isDown || this.keys.d.isDown) {
+        } else if (moveRight) {
             body.setVelocityX(speed)
             this.player.setFlipX(false)
             this.player.anims.play('male-walk', true)
         } else {
-            body.setVelocityX(0)
             body.setVelocityX(0)
             this.player.anims.play('male-idle', true)
         }
@@ -538,7 +598,7 @@ export default class GameScene extends Phaser.Scene {
                 // First encounter — auto-open immediately
                 this.openMemory(m)
             } else {
-                this.hint.setText('✦ Press E to reread')
+                this.hint.setText('✦ Press E or tap to reread')
                 this.subtitle.setText(m.date + ' — ' + m.title)
 
                 const pressed =
@@ -550,7 +610,7 @@ export default class GameScene extends Phaser.Scene {
             }
         } else {
             this.hint.setText('')
-            this.subtitle.setText('Arrow keys to walk  ·  Press E to remember')
+            this.subtitle.setText('Walk to explore memories')
         }
 
         // Update progress bar

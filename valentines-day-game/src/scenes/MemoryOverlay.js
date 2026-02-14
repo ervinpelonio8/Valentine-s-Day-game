@@ -116,6 +116,15 @@ export default class MemoryOverlay extends Phaser.Scene {
                 e: Phaser.Input.Keyboard.KeyCodes.E
             })
 
+            // ─── Tap to close (mobile) ───
+            this.bg.setInteractive()
+            this.bg.on('pointerdown', () => {
+                if (this.canClose) this.closeOverlay()
+            })
+
+            // ─── Footer tap hint ───
+            this.footerText.setText('Tap or press Enter / Space to continue')
+
             this.canClose = false
             this.time.delayedCall(400, () => { this.canClose = true })
 
@@ -130,6 +139,23 @@ export default class MemoryOverlay extends Phaser.Scene {
         }
     }
 
+    closeOverlay() {
+        if (!this.canClose) return
+        this.canClose = false // Prevent double-close
+
+        this.tweens.add({
+            targets: [this.bg, this.panel, this.accent, this.dateText, this.titleText, this.divider, this.bodyText, this.footerText],
+            alpha: 0,
+            duration: 200,
+            ease: 'Sine.easeIn',
+            onComplete: () => {
+                const gameScene = this.scene.get('Game')
+                gameScene.events.emit('resume-world')
+                this.scene.stop()
+            }
+        })
+    }
+
     update() {
         if (!this.canClose) return
 
@@ -140,18 +166,7 @@ export default class MemoryOverlay extends Phaser.Scene {
             Phaser.Input.Keyboard.JustDown(this.closeKeys.e)
 
         if (close) {
-            // Fade out
-            this.tweens.add({
-                targets: [this.bg, this.panel, this.accent, this.dateText, this.titleText, this.divider, this.bodyText, this.footerText],
-                alpha: 0,
-                duration: 200,
-                ease: 'Sine.easeIn',
-                onComplete: () => {
-                    const gameScene = this.scene.get('Game')
-                    gameScene.events.emit('resume-world')
-                    this.scene.stop()
-                }
-            })
+            this.closeOverlay()
         }
     }
 }
