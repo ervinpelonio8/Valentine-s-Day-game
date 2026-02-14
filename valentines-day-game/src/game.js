@@ -14,7 +14,7 @@ export function createGame() {
         parent: 'app',
         physics: {
             default: 'arcade',
-            arcade: { gravity: { y: 800 }, debug: true }
+            arcade: { gravity: { y: 800 }, debug: false }
         },
         scene: [Boot, TitleScene, GameScene, MemoryOverlay, EndingScene],
         pixelArt: true,
